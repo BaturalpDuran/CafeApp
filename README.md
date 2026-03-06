@@ -1,50 +1,77 @@
-# Welcome to your Expo app 👋
+☕ CafeApp - Mobile Coffee Management System
+A high-fidelity mobile application prototype for coffee shop management. Built with React Native, Expo Router, and Supabase, featuring a modern UI and robust role-based access control.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+🚀 Key Features
+Multi-Role System: Tailored experiences for Admin, Barista, and Customer.
 
-## Get started
+Theming: Full Dark/Light mode support with a custom toggle and system sync.
 
-1. Install dependencies
+Dynamic Content: Real-time data fetching for Campaigns and Recipes.
 
-   ```bash
-   npm install
-   ```
+Admin Suite: Comprehensive management for users, roles, and content (CRUD).
 
-2. Start the app
+Modern Navigation: File-based routing with Expo Router and interactive Tab Bars.
 
-   ```bash
-   npx expo start
-   ```
+🛠️ Installation & Setup
+Follow these steps to get the project running on your local machine.
 
-In the output, you'll find options to open the app in a
+1. Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Before you begin, make sure you have the following installed:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Node.js (LTS version)
 
-## Get a fresh project
+Git
 
-When you're ready, run:
+Expo Go app on your mobile device (to preview the app live)
 
-```bash
-npm run reset-project
-```
+2. Clone the Repository
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Bash
+git clone https://github.com/BaturalpDuran/CafeApp.git
+cd CafeApp 3. Install Dependencies
 
-## Learn more
+Run the following command to install all necessary packages and libraries:
 
-To learn more about developing your project with Expo, look at the following resources:
+Bash
+npm install
+This will set up React Native, Expo, Supabase Client, and all UI dependencies.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+4. Supabase Configuration
 
-## Join the community
+The project is pre-configured with the prototype's database credentials. You can find them in:
+src/lib/supabase.js
 
-Join our community of developers creating universal apps.
+Note: If you want to use your own Supabase instance, simply update the supabaseUrl and supabaseAnonKey in that file with your own project credentials.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+5. Start the Application
+
+Launch the development server by running:
+
+Bash
+npx expo start
+Once the server is running:
+
+iOS/Android: Scan the QR code using the Expo Go app.
+
+Emulator: Press i for iOS or a for Android simulator on your Mac.
+
+📂 Project Architecture
+app/: Routing logic and screens (Auth, Home, Admin Tabs).
+
+context/: Global State Management (Theme Context).
+
+constants/: Design tokens (Colors, Theme constants).
+
+lib/: Configuration for external services (Supabase).
+
+🧪 Test Accounts
+Use the following credentials to explore different roles:
+
+Admin: admin@cafeapp.com / 123456
+
+Barista: barista@cafeapp.com / 123456
+
+Customer: musteri@cafeapp.com / 123456
+
+Developed with ❤️ by Baturalp DURAN
