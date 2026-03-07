@@ -39,6 +39,55 @@ export class DatabaseService {
       throw error;
     }
   }
+
+  /**
+   * Fetches users from the database, optionally filtering by a search term.
+   * Uses Supabase's 'ilike' for case-insensitive partial matching across multiple columns.
+   * @param searchTerm The text to search for (email, first_name, or last_name).
+   * @returns Array of user objects.
+   */
+  static async getUsers(searchTerm: string = '') {
+    try {
+      // Start building the query
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // If a search term exists, apply the OR filter
+      if (searchTerm) {
+        query = query.or(
+          `email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`,
+        );
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw new Error(error.message);
+      return data;
+    } catch (error: any) {
+      console.error('Fetch Users Error: ', error.message);
+      throw error;
+    }
+  }
+  /**
+   * Updates the role of a specific user in the database.
+   * @param userId The ID of the user to update.
+   * @param newRole The new role to assign ('admin', 'barista', or 'customer').
+   */
+  static async updateUserRole(userId: string, newRole: string) {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw new Error(error.message);
+    } catch (error: any) {
+      console.error('Update Role Error: ', error.message);
+      throw error;
+    }
+  }
   // ==========================================
   // (CAMPAIGNS)
   // ==========================================
