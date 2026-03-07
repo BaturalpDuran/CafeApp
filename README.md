@@ -68,10 +68,10 @@ lib/: Configuration for external services (Supabase).
 🧪 Test Accounts
 Use the following credentials to explore different roles:
 
-Admin: admin@cafeapp.com / 123456
+Admin: admin@cafeapp.com / 1
 
-Barista: barista@cafeapp.com / 123456
+Barista: barista@cafeapp.com / 1
 
-Customer: musteri@cafeapp.com / 123456
+Customer: musteri@cafeapp.com / 1
 
 Developed with ❤️ by Baturalp DURAN
