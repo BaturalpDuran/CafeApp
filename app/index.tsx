@@ -1,6 +1,6 @@
 // app/index.tsx
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -26,8 +26,6 @@ export default function HomeScreen() {
 
   // ZİYARETÇİ KONTROLÜ İÇİN STATE
   const [user, setUser] = useState<any>(null);
-
-  //salih test
 
   useEffect(() => {
     fetchCampaigns();
