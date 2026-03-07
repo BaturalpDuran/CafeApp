@@ -1,6 +1,6 @@
 // app/index.tsx
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -37,7 +37,7 @@ export default function HomeScreen() {
     const { data } = await supabase.auth.getUser();
     setUser(data.user);
   };
-//test
+
   const fetchCampaigns = async () => {
     try {
       const data = await DatabaseService.getCampaigns();
