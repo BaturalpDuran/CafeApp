@@ -5,6 +5,41 @@ import { StorageService } from './storageService';
 // Tüm veritabanı işlemlerimizi yöneteceğimiz Controller/Service sınıfımız
 export class DatabaseService {
   // ==========================================
+  // USER MANAGEMENT
+  // ==========================================
+
+  /**
+   * Creates a new user profile in the database after successful authentication signup.
+   * Default role is assigned as 'customer'.
+   * @param userId The unique ID from Supabase Auth.
+   * @param email The user's email address.
+   * @param firstName The user's first name.
+   * @param lastName The user's last name.
+   */
+  static async createUserProfile(
+    userId: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+  ) {
+    try {
+      const { error } = await supabase.from('profiles').insert([
+        {
+          id: userId,
+          email: email,
+          first_name: firstName,
+          last_name: lastName,
+          role: 'customer', // Default role for new signups
+        },
+      ]);
+
+      if (error) throw new Error(error.message);
+    } catch (error: any) {
+      console.error('Create User Profile Error: ', error.message);
+      throw error;
+    }
+  }
+  // ==========================================
   // (CAMPAIGNS)
   // ==========================================
 
