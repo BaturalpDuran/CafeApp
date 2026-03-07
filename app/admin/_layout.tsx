@@ -8,7 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 export default function AdminTabLayout() {
   const { theme } = useTheme();
   const currentColors = Colors[theme as 'light' | 'dark'];
-
+  //jdnkajsnds
   return (
     <Tabs
       screenOptions={{
