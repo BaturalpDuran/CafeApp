@@ -149,6 +149,18 @@ export default function LoginScreen() {
           </Text>
         )}
       </TouchableOpacity>
+      {/* LINK TO REGISTER SCREEN */}
+      <TouchableOpacity
+        style={{ marginTop: 20, alignItems: 'center' }}
+        onPress={() => router.push('/register')}
+      >
+        <Text style={{ color: currentColors.text }}>
+          Don&apost have an account?
+          <Text style={{ color: currentColors.primary, fontWeight: 'bold' }}>
+            Sign Up
+          </Text>
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={{ marginTop: 20, alignItems: 'center' }}
         onPress={() => router.back()} // Geri dön
