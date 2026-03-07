@@ -1,10 +1,11 @@
 // services/databaseService.ts
 import { supabase } from '../lib/supabase';
+import { StorageService } from './storageService';
 
 // Tüm veritabanı işlemlerimizi yöneteceğimiz Controller/Service sınıfımız
 export class DatabaseService {
   // ==========================================
-  // KAMPANYA İŞLEMLERİ (CAMPAIGNS)
+  // (CAMPAIGNS)
   // ==========================================
 
   static async getCampaigns() {
@@ -40,13 +41,17 @@ export class DatabaseService {
     if (error) throw new Error(error.message);
   }
 
-  static async deleteCampaign(id: string) {
+  static async deleteCampaign(id: string, imageUrl: string) {
+    // First, try to remove the image from the storage bucket
+    await StorageService.deleteImage(imageUrl);
+
+    // Then, remove the record from the database
     const { error } = await supabase.from('campaigns').delete().eq('id', id);
     if (error) throw new Error(error.message);
   }
 
   // ==========================================
-  // TARİF İŞLEMLERİ (RECIPES)
+  // (RECIPES)
   // ==========================================
 
   static async getRecipes() {
@@ -78,7 +83,11 @@ export class DatabaseService {
     if (error) throw new Error(error.message);
   }
 
-  static async deleteRecipe(id: string) {
+  static async deleteRecipe(id: string, imageUrl: string) {
+    // First, try to remove the image from the storage bucket
+    await StorageService.deleteImage(imageUrl);
+
+    // Then, remove the record from the database
     const { error } = await supabase.from('recipes').delete().eq('id', id);
     if (error) throw new Error(error.message);
   }
