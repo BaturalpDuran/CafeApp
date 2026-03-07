@@ -1,5 +1,6 @@
 // app/admin/campaigns.tsx
 import { Ionicons } from '@expo/vector-icons'; // İkonlar için
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,7 +22,7 @@ import {
 import { Colors } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { DatabaseService } from '../../services/databaseService';
-
+import { StorageService } from '../../services/storageService';
 export default function AdminCampaignsScreen() {
   const { theme } = useTheme();
   const currentColors = Colors[theme as 'light' | 'dark'];
@@ -35,6 +36,7 @@ export default function AdminCampaignsScreen() {
   const [newDescription, setNewDescription] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -53,30 +55,84 @@ export default function AdminCampaignsScreen() {
     }
   };
 
-  // 2. KAMPANYA SİL (DELETE)
-  const handleDelete = (id: string, title: string) => {
+  /**
+   * Handles the deletion of a record and its associated image from storage.
+   */
+  const handleDelete = (id: string, title: string, imageUrl: string) => {
+    // <-- imageUrl eklendi
     Alert.alert(
-      'Silme Onayı',
-      `"${title}" adlı kampanyayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      'Delete Confirmation',
+      `Are you sure you want to delete "${title}"? This action cannot be undone.`,
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Sil',
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
-              await DatabaseService.deleteCampaign(id);
-              Alert.alert('Başarılı', 'Kampanya silindi.');
-              fetchCampaigns(); // Listeyi yenile
+              // Pass the imageUrl to the service layer for storage cleanup
+              await DatabaseService.deleteCampaign(id, imageUrl);
+              Alert.alert(
+                'Success',
+                'Item and associated image deleted successfully.',
+              );
+              fetchCampaigns();
             } catch (error: any) {
-              Alert.alert('Hata', error.message);
+              Alert.alert('Error', error.message);
             }
           },
         },
       ],
     );
   };
+  /**
+   * Requests gallery permissions, opens the image picker,
+   * and delegates the upload process to the StorageService.
+   */
+  const handlePickImage = async () => {
+    // Request permission to access the media library
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
+    if (!permissionResult.granted) {
+      Alert.alert(
+        'Permission Required',
+        'You need to allow gallery access to upload photos.',
+      );
+      return;
+    }
+
+    // Launch the image gallery
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.5, // Compress the image to save bandwidth
+      base64: true, // Required for Supabase upload
+    });
+
+    if (!result.canceled && result.assets[0].base64) {
+      try {
+        setIsUploading(true);
+        const base64 = result.assets[0].base64;
+        const uri = result.assets[0].uri;
+
+        // Extract the file extension from the URI (fallback to 'jpg')
+        const extension = uri.split('.').pop() || 'jpg';
+
+        // Call the service layer to handle the upload
+        const publicUrl = await StorageService.uploadImage(base64, extension);
+
+        // Auto-fill the URL input field with the returned public URL
+        setNewImageUrl(publicUrl);
+        Alert.alert('Success', 'Image uploaded successfully!');
+      } catch (error: any) {
+        Alert.alert('Upload Error', error.message);
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
   // 3. YENİ KAMPANYA EKLE (CREATE)
   const handleAddCampaign = async () => {
     if (!newTitle || !newDescription || !newImageUrl) {
@@ -117,10 +173,10 @@ export default function AdminCampaignsScreen() {
           </Text>
         </View>
 
-        {/* Çöp Kutusu (Silme) Butonu */}
+        {/* DELETE ICON */}
         <TouchableOpacity
           style={styles.deleteIcon}
-          onPress={() => handleDelete(item.id, item.title)}
+          onPress={() => handleDelete(item.id, item.title, item.image_url)} // <-- 3. parametreyi ekledik
         >
           <Ionicons name="trash-outline" size={24} color="#FF3B30" />
         </TouchableOpacity>
@@ -218,6 +274,16 @@ export default function AdminCampaignsScreen() {
                   numberOfLines={4}
                 />
 
+                <Text
+                  style={{
+                    color: currentColors.text,
+                    marginBottom: 5,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Image Source
+                </Text>
+
                 <TextInput
                   style={[
                     styles.input,
@@ -226,12 +292,38 @@ export default function AdminCampaignsScreen() {
                       borderColor: currentColors.secondary,
                     },
                   ]}
-                  placeholder="Resim URL (Unsplash vb.)"
+                  placeholder="Paste URL or upload from gallery"
                   placeholderTextColor="#9BA1A6"
                   value={newImageUrl}
                   onChangeText={setNewImageUrl}
                   autoCapitalize="none"
                 />
+
+                {/* IMAGE PICKER BUTTON - WITH PROPER STYLING */}
+                <TouchableOpacity
+                  style={[
+                    styles.imagePickerButton,
+                    {
+                      backgroundColor: currentColors.secondary,
+                      borderColor: currentColors.primary,
+                    },
+                  ]}
+                  onPress={handlePickImage}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <ActivityIndicator color={currentColors.primary} />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.imagePickerText,
+                        { color: currentColors.text },
+                      ]}
+                    >
+                      📸 Choose from Gallery
+                    </Text>
+                  )}
+                </TouchableOpacity>
 
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
@@ -321,7 +413,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
-
+  // --- NEW STYLES FOR IMAGE PICKER ---
+  imagePickerButton: {
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+  },
+  imagePickerText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   // Modal Stilleri
   modalOverlay: {
     flex: 1,
