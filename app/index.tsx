@@ -1,9 +1,8 @@
-// app/recipes.tsx
+// app/index.tsx
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   SafeAreaView,
@@ -18,43 +17,48 @@ import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { DatabaseService } from '../services/databaseService';
 
-export default function RecipesScreen() {
+export default function HomeScreen() {
   const { theme, toggleTheme } = useTheme();
   const currentColors = Colors[theme as 'light' | 'dark'];
 
-  const [recipes, setRecipes] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      try {
-        const data = await DatabaseService.getRecipes();
-        setRecipes(data || []);
-      } catch (error: any) {
-        console.error('Tarifler çekilirken hata:', error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // ZİYARETÇİ KONTROLÜ İÇİN STATE
+  const [user, setUser] = useState<any>(null);
 
-    fetchRecipes();
+  useEffect(() => {
+    fetchCampaigns();
+    checkUser();
   }, []);
 
-  // ÇIKIŞ YAPMA FONKSİYONU
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      Alert.alert('Çıkış Hatası', error.message);
-    } else {
-      // TypeScript'in kafası karışmasın diye 'as any' ekliyoruz
-      router.replace('/' as any);
+  // KULLANICI GİRİŞ YAPMIŞ MI KONTROL ET
+  const checkUser = async () => {
+    const { data } = await supabase.auth.getUser();
+    setUser(data.user);
+  };
+
+  const fetchCampaigns = async () => {
+    try {
+      const data = await DatabaseService.getCampaigns();
+      setCampaigns(data || []);
+    } catch (error: any) {
+      console.error('Kampanyalar çekilirken hata:', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const renderRecipe = ({ item }: { item: any }) => (
+  // ÇIKIŞ YAPMA
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null); // State'i sıfırla ki buton anında "Giriş"e dönsün
+  };
+
+  const renderCampaign = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: currentColors.secondary }]}
-      onPress={() => router.push(`../recipe/${item.id}`)}
+      onPress={() => router.push(`/campaign/${item.id}`)}
       activeOpacity={0.8}
     >
       <Image source={{ uri: item.image_url }} style={styles.cardImage} />
@@ -66,7 +70,7 @@ export default function RecipesScreen() {
           style={[styles.cardDescription, { color: currentColors.text }]}
           numberOfLines={2}
         >
-          {item.details}
+          {item.description}
         </Text>
       </View>
     </TouchableOpacity>
@@ -76,10 +80,9 @@ export default function RecipesScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: currentColors.background }]}
     >
-      {/* ÜST BİLGİ, TEMA VE ÇIKIŞ BUTONU */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: currentColors.text }]}>
-          Kahve Tarifleri
+          Ana Sayfa
         </Text>
 
         <View style={styles.headerRight}>
@@ -92,32 +95,55 @@ export default function RecipesScreen() {
               onValueChange={toggleTheme}
               trackColor={{ false: '#767577', true: currentColors.primary }}
               thumbColor={'#f4f3f4'}
-              style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }} // Switch'i biraz küçülttük
+              style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
             />
           </View>
 
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={[
-              styles.logoutButton,
-              { backgroundColor: currentColors.primary },
-            ]}
-          >
-            <Text
-              style={{
-                color: currentColors.background,
-                fontWeight: 'bold',
-                fontSize: 12,
-              }}
+          {/* KULLANICI VARSA "ÇIKIŞ", YOKSA "GİRİŞ" BUTONU */}
+          {user ? (
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={[
+                styles.authButton,
+                { backgroundColor: currentColors.primary },
+              ]}
             >
-              Çıkış
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={{
+                  color: currentColors.background,
+                  fontWeight: 'bold',
+                  fontSize: 12,
+                }}
+              >
+                Çıkış
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => router.push('/login')}
+              style={[
+                styles.authButton,
+                { backgroundColor: currentColors.primary },
+              ]}
+            >
+              <Text
+                style={{
+                  color: currentColors.background,
+                  fontWeight: 'bold',
+                  fontSize: 12,
+                }}
+              >
+                Giriş Yap
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
-      {/* TARİFLER LİSTESİ */}
       <View style={styles.content}>
+        <Text style={[styles.sectionTitle, { color: currentColors.primary }]}>
+          Öne Çıkan Kampanyalar
+        </Text>
         {loading ? (
           <ActivityIndicator
             size="large"
@@ -126,9 +152,9 @@ export default function RecipesScreen() {
           />
         ) : (
           <FlatList
-            data={recipes}
+            data={campaigns}
             keyExtractor={(item) => item.id.toString()}
-            renderItem={renderRecipe}
+            renderItem={renderCampaign}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
           />
@@ -148,15 +174,21 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     paddingBottom: 10,
   },
-  headerTitle: { fontSize: 24, fontWeight: 'bold' },
+  headerTitle: { fontSize: 28, fontWeight: 'bold' },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
   themeToggleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 10,
   },
-  logoutButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  content: { flex: 1, paddingHorizontal: 20, marginTop: 10 },
+  authButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  content: { flex: 1, paddingHorizontal: 20 },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 15,
+    marginTop: 10,
+  },
   card: {
     borderRadius: 15,
     marginBottom: 20,

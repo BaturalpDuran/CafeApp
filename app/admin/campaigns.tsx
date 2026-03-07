@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
-import { supabase } from '../../lib/supabase';
+import { DatabaseService } from '../../services/databaseService';
 
 export default function AdminCampaignsScreen() {
   const { theme } = useTheme();
@@ -43,15 +43,14 @@ export default function AdminCampaignsScreen() {
   // 1. KAMPANYALARI GETİR (READ)
   const fetchCampaigns = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('campaigns')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) console.error('Kampanyalar çekilirken hata:', error);
-    else setCampaigns(data || []);
-
-    setLoading(false);
+    try {
+      const data = await DatabaseService.getCampaigns();
+      setCampaigns(data || []);
+    } catch (error: any) {
+      console.error('Kampanyalar çekilirken hata:', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 2. KAMPANYA SİL (DELETE)
@@ -65,14 +64,12 @@ export default function AdminCampaignsScreen() {
           text: 'Sil',
           style: 'destructive',
           onPress: async () => {
-            const { error } = await supabase
-              .from('campaigns')
-              .delete()
-              .eq('id', id);
-            if (error) Alert.alert('Hata', error.message);
-            else {
+            try {
+              await DatabaseService.deleteCampaign(id);
               Alert.alert('Başarılı', 'Kampanya silindi.');
               fetchCampaigns(); // Listeyi yenile
+            } catch (error: any) {
+              Alert.alert('Hata', error.message);
             }
           },
         },
@@ -88,24 +85,18 @@ export default function AdminCampaignsScreen() {
     }
 
     setIsSubmitting(true);
-    const { error } = await supabase.from('campaigns').insert([
-      {
-        title: newTitle,
-        description: newDescription,
-        image_url: newImageUrl,
-      },
-    ]);
-    setIsSubmitting(false);
-
-    if (error) {
-      Alert.alert('Hata', error.message);
-    } else {
+    try {
+      await DatabaseService.addCampaign(newTitle, newDescription, newImageUrl);
       Alert.alert('Başarılı', 'Yeni kampanya eklendi!');
       setModalVisible(false); // Modalı kapat
       setNewTitle(''); // Formu temizle
       setNewDescription('');
       setNewImageUrl('');
       fetchCampaigns(); // Listeyi yenile
+    } catch (error: any) {
+      Alert.alert('Hata', error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
-import { supabase } from '../../lib/supabase';
+import { DatabaseService } from '../../services/databaseService';
 
 export default function AdminRecipesScreen() {
   const { theme } = useTheme();
@@ -42,15 +42,14 @@ export default function AdminRecipesScreen() {
 
   const fetchRecipes = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('recipes')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) console.error('Tarifler çekilirken hata:', error);
-    else setRecipes(data || []);
-
-    setLoading(false);
+    try {
+      const data = await DatabaseService.getRecipes();
+      setRecipes(data || []);
+    } catch (error: any) {
+      console.error('Tarifler çekilirken hata:', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = (id: string, title: string) => {
@@ -63,14 +62,12 @@ export default function AdminRecipesScreen() {
           text: 'Sil',
           style: 'destructive',
           onPress: async () => {
-            const { error } = await supabase
-              .from('recipes')
-              .delete()
-              .eq('id', id);
-            if (error) Alert.alert('Hata', error.message);
-            else {
+            try {
+              await DatabaseService.deleteRecipe(id);
               Alert.alert('Başarılı', 'Tarif silindi.');
               fetchRecipes();
+            } catch (error: any) {
+              Alert.alert('Hata', error.message);
             }
           },
         },
@@ -85,22 +82,18 @@ export default function AdminRecipesScreen() {
     }
 
     setIsSubmitting(true);
-    const { error } = await supabase
-      .from('recipes')
-      .insert([
-        { title: newTitle, details: newDetails, image_url: newImageUrl },
-      ]);
-    setIsSubmitting(false);
-
-    if (error) {
-      Alert.alert('Hata', error.message);
-    } else {
+    try {
+      await DatabaseService.addRecipe(newTitle, newDetails, newImageUrl);
       Alert.alert('Başarılı', 'Yeni tarif eklendi!');
       setModalVisible(false);
       setNewTitle('');
       setNewDetails('');
       setNewImageUrl('');
       fetchRecipes();
+    } catch (error: any) {
+      Alert.alert('Hata', error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

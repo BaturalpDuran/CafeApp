@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
-import { supabase } from '../../lib/supabase';
+import { DatabaseService } from '../../services/databaseService';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -24,18 +24,15 @@ export default function RecipeDetailScreen() {
 
   useEffect(() => {
     const fetchRecipeDetail = async () => {
-      const { data, error } = await supabase
-        .from('recipes')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Tarif detayı çekilirken hata:', error);
-      } else {
+      try {
+        // Servisimizden sadece id'yi göndererek veriyi istiyoruz
+        const data = await DatabaseService.getRecipeById(id);
         setRecipe(data);
+      } catch (error: any) {
+        console.error('Tarif detayı çekilirken hata:', error.message);
+      } finally {
+        setLoading(false); // Başarılı da olsa, hata da verse loading bitsin
       }
-      setLoading(false);
     };
 
     fetchRecipeDetail();

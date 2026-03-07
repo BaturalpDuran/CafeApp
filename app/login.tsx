@@ -1,4 +1,4 @@
-// app/index.tsx
+// app/login.tsx
 
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -12,8 +12,8 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Colors } from '../../constants/theme'; // Kendi renk paletimiz
-import { supabase } from '../../lib/supabase'; // Kurduğumuz veritabanı bağlantısı
+import { Colors } from '../constants/theme'; // Kendi renk paletimiz
+import { supabase } from '../lib/supabase'; // Kurduğumuz veritabanı bağlantısı
 
 export default function LoginScreen() {
   // 1. DURUM (STATE) YÖNETİMİ
@@ -77,8 +77,8 @@ export default function LoginScreen() {
       } else if (userRole === 'barista') {
         router.replace('/recipes');
       } else {
-        // Eğer müşteri ise veya tanımsız bir rol ise ana sayfaya (kampanyalara) gitsin
-        router.replace('/home');
+        // Müşteriyi ana sayfaya (kampanyalara) geri yolla
+        router.replace('/');
       }
     }
   };
@@ -148,6 +148,14 @@ export default function LoginScreen() {
             Giriş Yap
           </Text>
         )}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{ marginTop: 20, alignItems: 'center' }}
+        onPress={() => router.back()} // Geri dön
+      >
+        <Text style={{ color: currentColors.primary, fontWeight: 'bold' }}>
+          Misafir Olarak Devam Et
+        </Text>
       </TouchableOpacity>
     </View>
   );

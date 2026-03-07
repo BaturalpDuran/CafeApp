@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
-import { supabase } from '../../lib/supabase';
+import { DatabaseService } from '../../services/databaseService';
 
 export default function CampaignDetailScreen() {
   // URL'den gelen dinamik ID'yi yakalıyoruz
@@ -27,18 +27,14 @@ export default function CampaignDetailScreen() {
   useEffect(() => {
     // Fonksiyonu useEffect'in içine aldık, böylece sadece id'ye bağımlı oldu
     const fetchCampaignDetail = async () => {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Detay çekilirken hata:', error);
-      } else {
+      try {
+        const data = await DatabaseService.getCampaignById(id);
         setCampaign(data);
+      } catch (error: any) {
+        console.error('Detay çekilirken hata:', error.message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchCampaignDetail();

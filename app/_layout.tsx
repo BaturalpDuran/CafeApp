@@ -5,12 +5,12 @@ import { ThemeProvider } from '../context/ThemeContext';
 
 export default function RootLayout() {
   return (
-    // Kendi yazdığımız Tema sağlayıcımızla tüm uygulamayı sarmalıyoruz
     <ThemeProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        {/* Sayfalarımızı buraya tanıtıyoruz ki Expo Router yollarını bilsin */}
-        <Stack.Screen name="index" />
-        <Stack.Screen name="home" />
+        {/* Sayfalarımızın YENİ isimlerini buraya tanıtıyoruz */}
+        <Stack.Screen name="index" />{' '}
+        {/* Artık ana sayfamız (Kampanyalar) bu */}
+        <Stack.Screen name="login" /> {/* Giriş ekranımız bu oldu */}
         <Stack.Screen name="admin" />
         <Stack.Screen name="recipes" />
       </Stack>
